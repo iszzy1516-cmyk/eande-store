@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Int // price in kobo (NGN * 100)
+  category    String // CLOTHES | SHOES | ONESIES | TOWELS
+  sizes       String // comma-separated, e.g. "0-6M,6-12M,1-2Y"
+  image       String // path, e.g. "/products/<slug>.svg"
+  stock       Int      @default(0)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id           String   @id @default(cuid())
+  reference    String   @unique // Paystack reference
+  customerName String
+  email        String
+  phone        String
+  address      String
+  items        String // JSON: [{productId, name, size, qty, price}]
+  total        Int // total in kobo
+  status       String   @default("PENDING") // PENDING | PAID | PROCESSING | SHIPPED | DELIVERED | CANCELLED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

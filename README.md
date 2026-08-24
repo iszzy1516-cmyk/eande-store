@@ -1,1 +1,61 @@
-# eandekiddies
+# E&E Kiddies Wears 🍼✨
+
+Full-stack e-commerce website for **E&E Kiddies Wears** — baby & kids clothes, shoes, onesies and towels. Gold/yellow theme, Paystack payments (NGN), and a full admin panel.
+
+## Features
+
+- 🛍️ **Storefront** — homepage with categories & featured products, shop with category filters and search, product pages with size selection, cart (saved in the browser), checkout
+- 💳 **Paystack payments** — server-side transaction initialize + verify, prices always recomputed from the database (NGN, kobo)
+- 🔐 **Admin panel** (`/admin/login`) — real authentication (bcrypt + JWT httpOnly cookie), dashboard with stats, orders management with status updates, product CRUD
+- 🗄️ **SQLite + Prisma** — zero-config database, no external services needed for development
+
+## Tech stack
+
+Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma · SQLite · jose · bcryptjs · zod
+
+## Setup
+
+```bash
+npm install
+npx prisma migrate dev   # create the database
+npx prisma db seed       # demo admin + 12 sample products
+npm run dev              # http://localhost:3000
+```
+
+## Demo admin credentials
+
+| Email                   | Password   |
+| ----------------------- | ---------- |
+| `admin@eandekiddies.com` | `admin123` |
+
+**Change these before going live.** To change them, update `prisma/seed.ts` and re-run `npx prisma db seed`, or hash a new password with bcrypt and update the `AdminUser` row.
+
+## Paystack setup (required for real payments)
+
+1. Create a Paystack account → [dashboard.paystack.com](https://dashboard.paystack.com) → Settings → API Keys & Webhooks
+2. Copy `.env.example` values into `.env` and fill in:
+   - `PAYSTACK_SECRET_KEY` — your secret key (starts with `sk_test_` / `sk_live_`)
+   - `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` — your public key
+3. Restart the dev server. Without keys, checkout shows a friendly "payment not configured" notice instead of failing.
+4. (Optional) Webhook: point Paystack webhooks to `https://your-domain/api/paystack/webhook` — signature verification is built in.
+
+## Adding the real logo
+
+Save the client's logo image as `public/logo.png` — the navbar picks it up automatically (an inline SVG placeholder is used until then).
+
+## Project structure
+
+```
+app/
+  (store)/        storefront pages (home, shop, product, cart, checkout)
+  admin/          admin login + dashboard (orders, products)
+  api/            products, checkout, paystack, auth, admin routes
+components/       navbar, footer, product card, admin sidebar, ...
+lib/              db (prisma), auth, jwt, paystack, cart, orders, format
+prisma/           schema + seed
+public/products/  placeholder product images (SVG)
+```
+
+## Deployment
+
+Deploy to [Vercel](https://vercel.com): import this repo, set the env vars from `.env.example`, and run migrations against your production database. For production, consider switching Prisma from SQLite to PostgreSQL.

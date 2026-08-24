@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-nunito: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-playfair: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  body {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .btn-gold {
+    @apply inline-flex items-center justify-center rounded-full bg-gradient-to-b from-goldlight via-gold to-golddark px-8 py-3.5 text-xs font-extrabold uppercase tracking-[0.18em] text-white shadow-[0_4px_14px_rgba(212,164,25,0.45),inset_0_1px_0_rgba(255,255,255,0.5)] transition hover:brightness-110 hover:shadow-[0_6px_20px_rgba(212,164,25,0.55)] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-gold px-8 py-3.5 text-xs font-extrabold uppercase tracking-[0.18em] text-gold transition hover:bg-gold hover:text-white;
+  }
+  .input {
+    @apply w-full rounded-lg border border-cocoa/15 bg-white px-4 py-3 text-sm font-semibold text-cocoa outline-none transition placeholder:font-normal placeholder:text-cocoa/40 focus:border-gold focus:ring-1 focus:ring-gold/40;
+  }
+  .card {
+    @apply rounded-2xl border border-cocoa/5 bg-white;
+  }
+  .section-title {
+    @apply font-display text-3xl font-bold text-gold sm:text-4xl;
+  }
+}
