@@ -39,9 +39,9 @@ npm run dev              # http://localhost:3000
 3. Restart the dev server. Without keys, checkout shows a friendly "payment not configured" notice instead of failing.
 4. (Optional) Webhook: point Paystack webhooks to `https://your-domain/api/paystack/webhook` — signature verification is built in.
 
-## Adding the real logo
+## The logo
 
-Save the client's logo image as `public/logo.png` — the navbar picks it up automatically (an inline SVG placeholder is used until then).
+The client's logo is at `public/logo.jpeg`; `public/logo-mark.png` is a cropped onesie mark used in the navbar. To replace them, just overwrite those files.
 
 ## Project structure
 

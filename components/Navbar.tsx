@@ -23,9 +23,9 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={logoError ? "/logo.svg" : "/logo.png"}
+            src={logoError ? "/logo.svg" : "/logo-mark.png"}
             alt="E&E Kiddies Wears logo"
-            className="h-9 w-9 object-contain"
+            className="h-10 w-auto object-contain"
             onError={() => !logoError && setLogoError(true)}
           />
           <span className="font-display text-xl font-bold tracking-tight text-cocoa">
