@@ -63,11 +63,9 @@ const send = (chatId: number, text: string, extra: Record<string, unknown> = {})
 
 function categoryKeyboard() {
   return {
-    inline_keyboard: [
-      CATEGORIES.map((c) => [
-        { text: c[0] + c.slice(1).toLowerCase(), callback_data: `cat:${c}` },
-      ]),
-    ],
+    inline_keyboard: CATEGORIES.map((c) => [
+      { text: c[0] + c.slice(1).toLowerCase(), callback_data: `cat:${c}` },
+    ]),
   };
 }
 
