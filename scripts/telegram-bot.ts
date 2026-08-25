@@ -48,14 +48,27 @@ type Draft = {
 const drafts = new Map<number, Draft>();
 
 async function tg(method: string, payload: Record<string, unknown>) {
-  const res = await fetch(`${API}/${method}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (!data.ok) console.error(`Telegram ${method} failed:`, data.description);
-  return data;
+  // Retry a few times — the connection to api.telegram.org can be flaky.
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const res = await fetch(`${API}/${method}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        console.error(`Telegram ${method} failed:`, data.description);
+      }
+      return data;
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+    }
+  }
+  console.error(`Telegram ${method} failed after retries:`, lastErr);
+  return { ok: false };
 }
 
 const send = (chatId: number, text: string, extra: Record<string, unknown> = {}) =>
