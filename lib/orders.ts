@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { sendOrderAlert } from "./telegram";
 
 export type OrderItem = {
   productId: string;
@@ -24,8 +25,8 @@ export async function markOrderPaid(reference: string) {
 
   const items = JSON.parse(order.items) as OrderItem[];
 
-  return prisma.$transaction(async (tx) => {
-    const updated = await tx.order.update({
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedOrder = await tx.order.update({
       where: { id: order.id },
       data: { status: "PAID" },
     });
@@ -35,6 +36,13 @@ export async function markOrderPaid(reference: string) {
         data: { stock: { decrement: item.qty } },
       });
     }
-    return updated;
+    return updatedOrder;
   });
+
+  // Notify the shop owner on Telegram — fire-and-forget, never blocks payment.
+  sendOrderAlert(updated).catch((err) =>
+    console.error("Telegram order alert failed:", err)
+  );
+
+  return updated;
 }

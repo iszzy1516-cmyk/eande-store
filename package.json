@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
+    "bot": "node --env-file=.env --import tsx scripts/telegram-bot.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

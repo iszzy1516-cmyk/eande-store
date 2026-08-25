@@ -53,8 +53,28 @@ app/
 components/       navbar, footer, product card, admin sidebar, ...
 lib/              db (prisma), auth, jwt, paystack, cart, orders, format
 prisma/           schema + seed
-public/products/  placeholder product images (SVG)
+public/products/  product photos (client's own)
+scripts/          telegram-bot.ts (conversational uploader)
 ```
+
+## Telegram bot (@eande_alerts_bot)
+
+The bot does two things:
+
+- **Order alerts** — every time an order is paid, the owner's Telegram gets the customer name, phone, delivery address, total, and a photo of each ordered item.
+- **Phone product uploads** — the owner adds products by chatting with the bot: `/add` → name → category → price → sizes → stock → description → photo → publish. The product goes live instantly.
+
+Setup:
+
+1. Open [@eande_alerts_bot](https://t.me/eande_alerts_bot) in Telegram and send `/start` — it replies with your chat ID.
+2. Put that chat ID in `.env` as `TELEGRAM_ADMIN_CHAT_ID`.
+3. Run the bot alongside the site:
+
+```bash
+npm run bot
+```
+
+Only the configured chat ID can upload products. The bot uses long polling — no public URL needed.
 
 ## Deployment
 
