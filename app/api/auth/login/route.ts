@@ -9,6 +9,22 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+// Simple in-memory rate limit: 5 failed attempts per email+IP per 5 minutes.
+const attempts = new Map<string, number[]>();
+const WINDOW_MS = 5 * 60 * 1000;
+const MAX_ATTEMPTS = 5;
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const recent = (attempts.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
+  attempts.set(key, recent);
+  return recent.length >= MAX_ATTEMPTS;
+}
+
+function recordFailure(key: string) {
+  attempts.set(key, [...(attempts.get(key) ?? []), Date.now()]);
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -26,6 +42,17 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, password } = parsed.data;
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateKey = `${email.toLowerCase()}|${ip}`;
+
+  if (isRateLimited(rateKey)) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again in a few minutes." },
+      { status: 429 }
+    );
+  }
+
   const admin = await prisma.adminUser.findUnique({
     where: { email: email.toLowerCase() },
   });
@@ -33,11 +60,14 @@ export async function POST(req: NextRequest) {
   const valid =
     admin && (await bcrypt.compare(password, admin.passwordHash));
   if (!valid) {
+    recordFailure(rateKey);
     return NextResponse.json(
       { error: "Invalid email or password." },
       { status: 401 }
     );
   }
+
+  attempts.delete(rateKey);
 
   const token = await signSession({ sub: admin.id, email: admin.email });
 

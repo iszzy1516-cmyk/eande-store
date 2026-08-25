@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { prisma } from "@/lib/db";
 import { markOrderPaid } from "@/lib/orders";
 import { paystackConfigured } from "@/lib/paystack";
 
@@ -29,7 +30,17 @@ export async function POST(req: NextRequest) {
   try {
     const event = JSON.parse(rawBody);
     if (event.event === "charge.success" && event.data?.reference) {
-      await markOrderPaid(event.data.reference);
+      // Cross-check the paid amount against the order before confirming.
+      const order = await prisma.order.findUnique({
+        where: { reference: event.data.reference },
+      });
+      if (order && event.data.amount >= order.total) {
+        await markOrderPaid(event.data.reference);
+      } else if (order) {
+        console.error(
+          `Webhook amount mismatch for ${order.reference}: paid ${event.data.amount}, expected ${order.total}`
+        );
+      }
     }
   } catch (err) {
     console.error("Webhook handling failed:", err);
