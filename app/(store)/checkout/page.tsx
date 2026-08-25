@@ -14,11 +14,17 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  const fieldError = (name: string) => fieldErrors[name]?.[0];
+  const inputCls = (name: string) =>
+    `input ${fieldError(name) ? "border-red-400 ring-1 ring-red-300" : ""}`;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setNotice(null);
+    setFieldErrors({});
     setLoading(true);
 
     try {
@@ -46,7 +52,12 @@ export default function CheckoutPage() {
         return;
       }
       if (!res.ok) {
-        setError(data.error || "Something went wrong. Please try again.");
+        if (res.status === 400 && data.details?.fieldErrors) {
+          setFieldErrors(data.details.fieldErrors);
+          setError("Please fix the highlighted fields below.");
+        } else {
+          setError(data.error || "Something went wrong. Please try again.");
+        }
         return;
       }
 
@@ -86,13 +97,18 @@ export default function CheckoutPage() {
               Full Name
             </label>
             <input
-              className="input"
+              className={inputCls("customerName")}
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
               minLength={2}
               placeholder="e.g. Adaeze Okafor"
             />
+            {fieldError("customerName") && (
+              <p className="mt-1 text-xs font-semibold text-red-600">
+                {fieldError("customerName")}
+              </p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-cocoa/70">
@@ -100,12 +116,17 @@ export default function CheckoutPage() {
             </label>
             <input
               type="email"
-              className="input"
+              className={inputCls("email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
             />
+            {fieldError("email") && (
+              <p className="mt-1 text-xs font-semibold text-red-600">
+                {fieldError("email")}
+              </p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-cocoa/70">
@@ -113,26 +134,36 @@ export default function CheckoutPage() {
             </label>
             <input
               type="tel"
-              className="input"
+              className={inputCls("phone")}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
               minLength={7}
               placeholder="0801 234 5678"
             />
+            {fieldError("phone") && (
+              <p className="mt-1 text-xs font-semibold text-red-600">
+                {fieldError("phone")}
+              </p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-cocoa/70">
               Delivery Address
             </label>
             <textarea
-              className="input min-h-24"
+              className={`${inputCls("address")} min-h-24`}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
-              minLength={5}
-              placeholder="Street, city, state"
+              minLength={10}
+              placeholder="Street, area, city, state"
             />
+            {fieldError("address") && (
+              <p className="mt-1 text-xs font-semibold text-red-600">
+                {fieldError("address")}
+              </p>
+            )}
           </div>
 
           {notice && (

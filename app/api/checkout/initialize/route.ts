@@ -5,10 +5,21 @@ import { generateReference, type OrderItem } from "@/lib/orders";
 import { initializeTransaction, paystackConfigured } from "@/lib/paystack";
 
 const checkoutSchema = z.object({
-  customerName: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(7),
-  address: z.string().min(5),
+  customerName: z
+    .string()
+    .trim()
+    .min(2, "Enter your full name")
+    .max(80, "Name is too long"),
+  email: z.string().trim().email("Enter a valid email address"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9\s-]{7,15}$/, "Enter a valid phone number"),
+  address: z
+    .string()
+    .trim()
+    .min(10, "Enter your full address — street, area, city")
+    .max(300, "Address is too long"),
   items: z
     .array(
       z.object({
