@@ -301,8 +301,8 @@ async function handleCallback(query: any) {
 }
 
 async function main() {
-  // Long polling requires no webhook.
-  await tg("deleteWebhook", { drop_pending_updates: false });
+  // Long polling requires no webhook; drop any backlog queued while offline.
+  await tg("deleteWebhook", { drop_pending_updates: true });
 
   const me = await tg("getMe", {});
   console.log(`Bot running as @${me.result?.username} (long polling). Ctrl+C to stop.`);
@@ -323,6 +323,9 @@ async function main() {
       }
       for (const update of data.result) {
         offset = update.update_id + 1;
+        // Ignore messages older than 60s (backlog after a restart).
+        const ts = update.message?.date ?? update.callback_query?.message?.date;
+        if (ts && Date.now() / 1000 - ts > 60) continue;
         try {
           if (update.message?.text) {
             await handleText(update.message.chat.id, update.message.text.trim());
