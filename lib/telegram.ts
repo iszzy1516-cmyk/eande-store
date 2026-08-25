@@ -4,7 +4,7 @@ import { prisma } from "./db";
 import { formatNaira } from "./format";
 import type { OrderItem } from "./orders";
 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TOKEN = process.env.TELEGRAM_ALERTS_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
 export const TELEGRAM_API = `https://api.telegram.org/bot${TOKEN}`;

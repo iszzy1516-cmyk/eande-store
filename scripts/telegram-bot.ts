@@ -1,7 +1,7 @@
 /**
- * E&E Kiddies — Telegram conversational product uploader.
+ * E&E Kiddies — Telegram conversational product uploader (Upload Bot).
  *
- * The shop owner chats with the bot from their phone:
+ * The shop owner chats with the upload bot from their phone:
  *   /add → name → category → price → sizes → stock → description → photo → confirm
  * …and the product goes live on the store immediately.
  *
@@ -13,11 +13,11 @@ import { prisma } from "../lib/db";
 import { formatNaira } from "../lib/format";
 import { uniqueSlug } from "../lib/slug";
 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TOKEN = process.env.TELEGRAM_UPLOAD_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
 if (!TOKEN) {
-  console.error("TELEGRAM_BOT_TOKEN is not set in .env");
+  console.error("TELEGRAM_UPLOAD_BOT_TOKEN is not set in .env");
   process.exit(1);
 }
 

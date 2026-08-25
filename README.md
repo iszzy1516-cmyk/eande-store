@@ -57,24 +57,23 @@ public/products/  product photos (client's own)
 scripts/          telegram-bot.ts (conversational uploader)
 ```
 
-## Telegram bot (@eande_alerts_bot)
+## Telegram bots
 
-The bot does two things:
+Two separate bots, so staff never mix them up:
 
-- **Order alerts** — every time an order is paid, the owner's Telegram gets the customer name, phone, delivery address, total, and a photo of each ordered item.
-- **Phone product uploads** — the owner adds products by chatting with the bot: `/add` → name → category → price → sizes → stock → description → photo → publish. The product goes live instantly.
-
-Setup:
-
-1. Open [@eande_alerts_bot](https://t.me/eande_alerts_bot) in Telegram and send `/start` — it replies with your chat ID.
-2. Put that chat ID in `.env` as `TELEGRAM_ADMIN_CHAT_ID`.
-3. Run the bot alongside the site:
+- **Alerts bot** (@eande_alerts_bot) — send-only. Every time an order is paid, it messages the admin chat with the customer name, phone, delivery address, total, and a photo of each ordered item. No commands, nothing to run — the website sends these itself. Token goes in `.env` as `TELEGRAM_ALERTS_BOT_TOKEN`.
+- **Upload bot** — conversational product uploads from a phone: `/add` → name → category → price → sizes → stock → description → photo → publish. The product goes live instantly. Token goes in `.env` as `TELEGRAM_UPLOAD_BOT_TOKEN`, then run:
 
 ```bash
 npm run bot
 ```
 
-Only the configured chat ID can upload products. The bot uses long polling — no public URL needed.
+Setup:
+
+1. In Telegram, send `/start` to each bot once.
+2. Put the admin chat ID in `.env` as `TELEGRAM_ADMIN_CHAT_ID` (send `/start` to the upload bot while `TELEGRAM_ADMIN_CHAT_ID` is empty and it replies with your chat ID).
+
+Only the configured chat ID can upload products. The upload bot uses long polling — no public URL needed.
 
 ## Deployment
 
