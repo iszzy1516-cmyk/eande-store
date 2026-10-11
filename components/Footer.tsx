@@ -50,8 +50,8 @@ export default function Footer() {
             Contact
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-cocoa/60">
-            <li>Phone: +234 000 000 0000</li>
-            <li>Email: hello@eandekiddies.com</li>
+            <li>Phone: +234 704 021 7991</li>
+            <li>Email: EEKIDDIESWEARS@YAHOO.COM</li>
             <li>Lagos, Nigeria</li>
           </ul>
         </div>

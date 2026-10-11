@@ -5,3 +5,4 @@ dev.db*
 *.tsbuildinfo
 next-env.d.ts
 /out
+.next-static
