@@ -1,0 +1,24 @@
+# Render blueprint — New > Blueprint in the Render dashboard picks this up.
+services:
+  - type: web
+    name: eande-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # set in dashboard: your Neon (or SQLite) connection string
+      - key: SESSION_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false # https://your-app.onrender.com
+      - key: FRONTEND_ORIGIN
+        sync: false # https://eandekiddies.pages.dev
+      - key: BACHS_SECRET_KEY
+        sync: false
+      - key: BACHS_WEBHOOK_SECRET
+        sync: false
+      - key: TELEGRAM_ALERTS_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
