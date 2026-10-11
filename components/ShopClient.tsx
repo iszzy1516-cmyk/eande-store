@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import ProductCard from "./ProductCard";
 
-type Product = {
+export type Product = {
   id: string;
   slug: string;
   name: string;
@@ -25,17 +26,24 @@ const CATEGORIES = [
 
 const VALID = CATEGORIES.map((c) => c.value);
 
-export default function ShopClient({
-  products,
-  initialCategory = "ALL",
-}: {
-  products: Product[];
-  initialCategory?: string;
-}) {
-  const [category, setCategory] = useState(
-    VALID.includes(initialCategory) ? initialCategory : "ALL"
-  );
+function initialCategory(): string {
+  if (typeof window === "undefined") return "ALL";
+  const q = new URLSearchParams(window.location.search).get("category");
+  return q && VALID.includes(q) ? q : "ALL";
+}
+
+export default function ShopClient() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState(initialCategory);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    apiFetch("/api/products")
+      .then((r) => (r.ok ? r.json() : { products: [] }))
+      .then((d) => setProducts(d.products))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -76,7 +84,9 @@ export default function ShopClient({
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <p className="mt-12 text-center text-cocoa/50">Loading products…</p>
+      ) : filtered.length === 0 ? (
         <p className="mt-12 text-center text-cocoa/60">
           {search.trim()
             ? "No products match your search."

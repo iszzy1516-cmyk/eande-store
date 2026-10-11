@@ -12,6 +12,7 @@ import path from "node:path";
 import { prisma } from "../lib/db";
 import { formatNaira } from "../lib/format";
 import { uniqueSlug } from "../lib/slug";
+import { r2Configured, uploadToR2 } from "../lib/r2";
 
 const TOKEN = process.env.TELEGRAM_UPLOAD_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
@@ -133,9 +134,15 @@ async function publish(chatId: number, d: Draft) {
     const buf = Buffer.from(
       await (await fetch(`${FILE_API}/${filePath}`)).arrayBuffer()
     );
-    const rel = `/products/${slug}${ext}`;
-    await writeFile(path.join(process.cwd(), "public", rel.slice(1)), buf);
-    image = rel;
+    if (r2Configured()) {
+      // Hosted setup: photos go to Cloudflare R2 so they appear on the site.
+      image = await uploadToR2(`products/${slug}${ext}`, buf, "image/jpeg");
+    } else {
+      // Local dev: save next to the seeded photos in public/.
+      const rel = `/products/${slug}${ext}`;
+      await writeFile(path.join(process.cwd(), "public", rel.slice(1)), buf);
+      image = rel;
+    }
   }
 
   const product = await prisma.product.create({

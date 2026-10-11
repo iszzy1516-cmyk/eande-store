@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { formatNaira } from "@/lib/format";
+import { apiFetch } from "@/lib/api";
 
 type Product = {
   id: string;
@@ -39,7 +40,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState("");
 
   async function load() {
-    const res = await fetch("/api/admin/products");
+    const res = await apiFetch("/api/admin/products");
     if (res.ok) {
       const d = await res.json();
       setProducts(d.products);
@@ -97,7 +98,7 @@ export default function AdminProductsPage() {
       image: form.image,
     };
 
-    const res = await fetch(
+    const res = await apiFetch(
       editing ? `/api/admin/products/${editing.id}` : "/api/admin/products",
       {
         method: editing ? "PATCH" : "POST",
@@ -121,7 +122,7 @@ export default function AdminProductsPage() {
 
   async function remove(p: Product) {
     if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
-    const res = await fetch(`/api/admin/products/${p.id}`, {
+    const res = await apiFetch(`/api/admin/products/${p.id}`, {
       method: "DELETE",
       headers: { "X-Requested-With": "XMLHttpRequest" },
     });

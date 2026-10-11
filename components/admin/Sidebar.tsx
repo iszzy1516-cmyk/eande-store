@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 const LINKS = [
   { href: "/admin", label: "Dashboard" },
@@ -18,7 +19,7 @@ export default function Sidebar() {
 
   async function logout() {
     setLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
+    await apiFetch("/api/auth/logout", { method: "POST" });
     router.push("/admin/login");
     router.refresh();
   }

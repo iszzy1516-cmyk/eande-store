@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { apiFetch } from "@/lib/api";
 
 export default function AdminSettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -22,7 +23,7 @@ export default function AdminSettingsPage() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/auth/change-password", {
+      const res = await apiFetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),

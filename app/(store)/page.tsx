@@ -1,8 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
-import ProductCard from "@/components/ProductCard";
-
-export const dynamic = "force-dynamic";
+import FeaturedProducts from "@/components/FeaturedProducts";
 
 const CATEGORIES = [
   {
@@ -22,13 +19,7 @@ const CATEGORIES = [
   },
 ];
 
-export default async function HomePage() {
-  const featured = await prisma.product.findMany({
-    where: { featured: true },
-    orderBy: { createdAt: "asc" },
-    take: 8,
-  });
-
+export default function HomePage() {
   return (
     <div>
       {/* Hero */}
@@ -85,11 +76,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 pb-16">
         <h2 className="section-title text-center">Featured Pieces</h2>
         <div className="mx-auto mt-2 h-px w-16 bg-gold/40" />
-        <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-          {featured.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <FeaturedProducts />
         <div className="mt-12 text-center">
           <Link href="/shop" className="btn-outline">
             View All Products

@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isStaticExport = process.env.STATIC_EXPORT === "true";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -12,6 +14,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // STATIC_EXPORT=true produces out/ for Cloudflare Pages; otherwise serve
+  // the full app (Railway) including the API routes.
+  output: isStaticExport ? "export" : undefined,
+  images: isStaticExport ? { unoptimized: true } : undefined,
+  trailingSlash: isStaticExport ? true : undefined,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

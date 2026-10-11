@@ -7,12 +7,14 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "bot": "node --env-file=.env --import tsx scripts/telegram-bot.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build:static": "node scripts/build-static.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1149.0",
     "@prisma/client": "^6.5.0",
     "bcryptjs": "^3.0.2",
     "jose": "^5.10.0",

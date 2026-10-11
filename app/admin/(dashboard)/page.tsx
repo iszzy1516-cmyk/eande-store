@@ -1,9 +1,17 @@
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+"use client";
+
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { formatNaira } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+type Order = {
+  id: string;
+  reference: string;
+  customerName: string;
+  total: number;
+  status: string;
+  createdAt: string;
+};
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-700",
@@ -14,17 +22,27 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-700",
 };
 
-export default async function AdminDashboard() {
-  const session = await getSession();
-  if (!session) redirect("/admin/login");
+export default function AdminDashboard() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [productCount, setProductCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const [orders, productCount] = await Promise.all([
-    prisma.order.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.product.count(),
-  ]);
+  useEffect(() => {
+    Promise.all([
+      apiFetch("/api/admin/orders").then((r) => (r.ok ? r.json() : null)),
+      apiFetch("/api/admin/products").then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([o, p]) => {
+        if (o?.orders) setOrders(o.orders);
+        if (p?.products) setProductCount(p.products.length);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const revenue = orders
-    .filter((o) => ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"].includes(o.status))
+    .filter((o) =>
+      ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"].includes(o.status)
+    )
     .reduce((sum, o) => sum + o.total, 0);
   const pendingCount = orders.filter((o) => o.status === "PENDING").length;
   const recent = orders.slice(0, 5);
@@ -35,6 +53,12 @@ export default async function AdminDashboard() {
     { label: "Products", value: String(productCount) },
     { label: "Pending Orders", value: String(pendingCount) },
   ];
+
+  if (loading) {
+    return (
+      <p className="text-sm text-cocoa/50">Loading dashboard…</p>
+    );
+  }
 
   return (
     <div>
@@ -77,7 +101,7 @@ export default async function AdminDashboard() {
                     {formatNaira(o.total)}
                   </td>
                   <td className="px-5 py-3 text-cocoa/60">
-                    {o.createdAt.toLocaleDateString("en-NG", {
+                    {new Date(o.createdAt).toLocaleDateString("en-NG", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",

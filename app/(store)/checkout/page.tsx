@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
+import { apiFetch } from "@/lib/api";
 import { formatNaira } from "@/lib/format";
 
 export default function CheckoutPage() {
@@ -28,7 +29,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/checkout/initialize", {
+      const res = await apiFetch("/api/checkout/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -35,6 +35,28 @@ const schema = z.object({
     emptyToUndefined,
     z.string().min(8).optional()
   ),
+  NEXT_PUBLIC_API_URL: z.preprocess(
+    emptyToUndefined,
+    z.string().url().optional()
+  ),
+  FRONTEND_ORIGIN: z.preprocess(
+    emptyToUndefined,
+    z.string().url().optional()
+  ),
+  R2_ACCOUNT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  R2_ACCESS_KEY_ID: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional()
+  ),
+  R2_SECRET_ACCESS_KEY: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional()
+  ),
+  R2_BUCKET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  R2_PUBLIC_URL: z.preprocess(
+    emptyToUndefined,
+    z.string().url().optional()
+  ),
 });
 
 export const env = schema.parse(process.env);

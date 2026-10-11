@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import { formatNaira } from "@/lib/format";
+import { apiFetch } from "@/lib/api";
 
 type OrderItem = {
   productId: string;
@@ -49,7 +50,7 @@ export default function AdminOrdersPage() {
   const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/orders")
+    apiFetch("/api/admin/orders")
       .then((r) => (r.ok ? r.json() : { orders: [] }))
       .then((d) => setOrders(d.orders))
       .finally(() => setLoading(false));
@@ -57,7 +58,7 @@ export default function AdminOrdersPage() {
 
   async function updateStatus(id: string, status: string) {
     setSaving(id);
-    const res = await fetch(`/api/admin/orders/${id}`, {
+    const res = await apiFetch(`/api/admin/orders/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

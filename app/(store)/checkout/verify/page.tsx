@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/lib/cart";
+import { apiFetch } from "@/lib/api";
 
 type State =
   | { status: "loading" }
@@ -31,7 +32,7 @@ function VerifyClient() {
     const query = checkoutId
       ? `checkout_id=${encodeURIComponent(checkoutId)}`
       : `reference=${encodeURIComponent(reference!)}`;
-    fetch(`/api/payment/verify?${query}`)
+    apiFetch(`/api/payment/verify?${query}`)
       .then(async (res) => {
         const data = await res.json();
         if (cancelled) return;
