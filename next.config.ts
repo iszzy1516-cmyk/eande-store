@@ -15,7 +15,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   // STATIC_EXPORT=true produces out/ for Cloudflare Pages; otherwise serve
-  // the full app (Railway) including the API routes.
+  // the full app (Railway) including the API routes. Separate distDir so the
+  // two build modes never clobber each other.
+  distDir: isStaticExport ? ".next-static" : ".next",
   output: isStaticExport ? "export" : undefined,
   images: isStaticExport ? { unoptimized: true } : undefined,
   trailingSlash: isStaticExport ? true : undefined,
