@@ -55,6 +55,7 @@ export default function ShopClient({
             <button
               key={c.value}
               type="button"
+              aria-pressed={category === c.value}
               onClick={() => setCategory(c.value)}
               className={`rounded-full px-6 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${
                 category === c.value

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { csrfGuard } from "@/lib/csrf";
 import { uniqueSlug } from "@/lib/slug";
 
 const updateSchema = z.object({
@@ -22,6 +23,8 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const forbidden = csrfGuard(req);
+  if (forbidden) return forbidden;
 
   const { id } = await params;
   const existing = await prisma.product.findUnique({ where: { id } });
@@ -59,11 +62,13 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   return NextResponse.json({ product });
 }
 
-export async function DELETE(_req: NextRequest, { params }: Props) {
+export async function DELETE(req: NextRequest, { params }: Props) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const forbidden = csrfGuard(req);
+  if (forbidden) return forbidden;
 
   const { id } = await params;
   const existing = await prisma.product.findUnique({ where: { id } });

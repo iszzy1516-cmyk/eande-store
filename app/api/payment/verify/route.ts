@@ -21,9 +21,10 @@ export async function GET(req: NextRequest) {
 
   // Idempotent: already-confirmed orders return success immediately.
   if (order.status !== "PENDING") {
+    // Return the minimum the success page needs — never totals or PII.
     return NextResponse.json({
       status: "success",
-      order: { reference: order.reference, total: order.total },
+      order: { reference: order.reference },
     });
   }
 
@@ -47,10 +48,10 @@ export async function GET(req: NextRequest) {
           );
         }
       }
-      const paid = await markOrderPaid(order.reference);
+      await markOrderPaid(order.reference);
       return NextResponse.json({
         status: "success",
-        order: { reference: paid?.reference, total: paid?.total },
+        order: { reference: order.reference },
       });
     }
     return NextResponse.json(

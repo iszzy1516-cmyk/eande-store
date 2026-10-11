@@ -69,7 +69,11 @@ export async function POST(req: NextRequest) {
 
   attempts.delete(rateKey);
 
-  const token = await signSession({ sub: admin.id, email: admin.email });
+  const token = await signSession({
+    sub: admin.id,
+    email: admin.email,
+    tv: admin.tokenVersion,
+  });
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {

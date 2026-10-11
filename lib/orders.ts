@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
 import { sendOrderAlert } from "./telegram";
 
@@ -10,8 +11,7 @@ export type OrderItem = {
 };
 
 export function generateReference(): string {
-  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `EE-${Date.now()}-${rand}`;
+  return `EE-${randomUUID()}`;
 }
 
 /**
@@ -35,10 +35,16 @@ export async function markOrderPaid(reference: string) {
     if (count === 0) return null;
 
     for (const item of items) {
-      await tx.product.updateMany({
-        where: { id: item.productId },
+      // Conditional decrement: never drive stock below zero (oversell guard).
+      const { count: dec } = await tx.product.updateMany({
+        where: { id: item.productId, stock: { gte: item.qty } },
         data: { stock: { decrement: item.qty } },
       });
+      if (dec === 0) {
+        console.error(
+          `Oversell on ${item.productId}: tried to decrement ${item.qty} below available stock`
+        );
+      }
     }
     return tx.order.findUnique({ where: { id: order.id } });
   });

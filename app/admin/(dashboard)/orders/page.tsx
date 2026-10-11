@@ -59,7 +59,10 @@ export default function AdminOrdersPage() {
     setSaving(id);
     const res = await fetch(`/api/admin/orders/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
       body: JSON.stringify({ status }),
     });
     if (res.ok) {
@@ -150,6 +153,7 @@ export default function AdminOrdersPage() {
                     <td className="px-5 py-3">
                       <button
                         type="button"
+                        aria-expanded={expanded === o.id}
                         onClick={() =>
                           setExpanded(expanded === o.id ? null : o.id)
                         }

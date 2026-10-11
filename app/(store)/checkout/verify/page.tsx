@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useCart } from "@/lib/cart";
 
 type State =
   | { status: "loading" }
@@ -13,7 +14,13 @@ function VerifyClient() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
   const checkoutId = searchParams.get("checkout_id");
+  const { clearCart } = useCart();
   const [state, setState] = useState<State>({ status: "loading" });
+
+  // Payment confirmed — now it is safe to empty the cart.
+  useEffect(() => {
+    if (state.status === "success") clearCart();
+  }, [state.status, clearCart]);
 
   useEffect(() => {
     if (!reference && !checkoutId) {

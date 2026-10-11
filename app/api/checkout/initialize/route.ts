@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { generateReference, type OrderItem } from "@/lib/orders";
 import { bachsConfigured, createCheckoutSession } from "@/lib/bachs";
+import { appUrl } from "@/lib/env";
 
 const checkoutSchema = z.object({
   customerName: z
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const origin = req.headers.get("origin") ?? req.nextUrl.origin;
+  const origin = appUrl(req.headers.get("origin"));
 
   try {
     const session = await createCheckoutSession({

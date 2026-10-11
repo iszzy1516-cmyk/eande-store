@@ -37,11 +37,12 @@ export default async function ProductPage({ params }: Props) {
         <Link href="/" className="hover:text-gold">
           Home
         </Link>{" "}
-        /{" "}
+        <span aria-hidden="true"> / </span>
         <Link href="/shop" className="hover:text-gold">
           Shop
         </Link>{" "}
-        / <span className="text-cocoa">{product.name}</span>
+        <span aria-hidden="true"> / </span>
+        <span className="text-cocoa">{product.name}</span>
       </nav>
 
       <div className="mt-8 grid gap-12 md:grid-cols-2">

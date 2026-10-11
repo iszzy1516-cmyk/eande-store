@@ -126,7 +126,10 @@ async function publish(chatId: number, d: Draft) {
   const filePath = fileRes.result?.file_path as string | undefined;
   let image = "/products/placeholder.jpg";
   if (filePath) {
-    const ext = path.extname(filePath) || ".jpg";
+    const rawExt = path.extname(filePath).toLowerCase();
+    const ext = [".jpg", ".jpeg", ".png", ".webp"].includes(rawExt)
+      ? rawExt
+      : ".jpg";
     const buf = Buffer.from(
       await (await fetch(`${FILE_API}/${filePath}`)).arrayBuffer()
     );
@@ -262,6 +265,11 @@ async function handleText(chatId: number, text: string) {
 }
 
 async function handlePhoto(chatId: number, message: any) {
+  // Same gate as text commands: only the configured admin chat may upload.
+  if (ADMIN_CHAT_ID && String(chatId) !== ADMIN_CHAT_ID) {
+    await send(chatId, "Sorry, this bot is private to E&E Kiddies Wears.");
+    return;
+  }
   const d = drafts.get(chatId);
   if (!d || d.step !== "photo") {
     await send(chatId, "Nice photo! Send /add first if you want to upload a product.");

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { csrfGuard } from "@/lib/csrf";
 
 const updateSchema = z.object({
   status: z.enum([
@@ -21,6 +22,8 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const forbidden = csrfGuard(req);
+  if (forbidden) return forbidden;
 
   const { id } = await params;
   const body = await req.json().catch(() => null);

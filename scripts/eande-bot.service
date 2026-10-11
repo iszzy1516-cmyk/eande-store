@@ -1,0 +1,19 @@
+# systemd unit for the E&E Kiddies Telegram upload bot.
+# Install:  sudo cp scripts/eande-bot.service /etc/systemd/system/
+#           sudo systemctl enable --now eande-bot
+# Logs:     journalctl -u eande-bot -f
+[Unit]
+Description=E&E Kiddies Telegram upload bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/israel/eandekiddies
+ExecStart=/usr/bin/npm run bot
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

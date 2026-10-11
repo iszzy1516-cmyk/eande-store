@@ -44,9 +44,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Bump tokenVersion so every existing session is revoked immediately.
   await prisma.adminUser.update({
     where: { id: admin.id },
-    data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 10) },
+    data: {
+      passwordHash: await bcrypt.hash(parsed.data.newPassword, 10),
+      tokenVersion: { increment: 1 },
+    },
   });
 
   return NextResponse.json({ ok: true });

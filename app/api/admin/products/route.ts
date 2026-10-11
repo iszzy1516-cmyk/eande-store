@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { csrfGuard } from "@/lib/csrf";
 import { uniqueSlug } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const forbidden = csrfGuard(req);
+  if (forbidden) return forbidden;
 
   const body = await req.json().catch(() => null);
   const parsed = productSchema.safeParse(body);

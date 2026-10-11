@@ -298,30 +298,48 @@ const products = [
 ];
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("Seeding database (safe mode — upserts only, orders untouched)...");
 
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.adminUser.deleteMany();
+  // Admin password comes from the environment. In development, generate a
+  // random one if unset; in production it must be provided explicitly.
+  let password = process.env.ADMIN_INITIAL_PASSWORD;
+  if (!password) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "ADMIN_INITIAL_PASSWORD is required to seed in production."
+      );
+    }
+    password = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    console.log(
+      `ADMIN_INITIAL_PASSWORD not set — generated a random one for dev: ${password}`
+    );
+  }
+  if (password.length < 8) {
+    throw new Error("ADMIN_INITIAL_PASSWORD must be at least 8 characters.");
+  }
 
-  const passwordHash = await bcrypt.hash("admin123", 10);
-  await prisma.adminUser.create({
-    data: {
+  const passwordHash = await bcrypt.hash(password, 10);
+  await prisma.adminUser.upsert({
+    where: { email: "admin@eandekiddies.com" },
+    update: { passwordHash },
+    create: {
       email: "admin@eandekiddies.com",
       passwordHash,
     },
   });
-  console.log("Created admin user: admin@eandekiddies.com");
+  console.log("Admin user ready: admin@eandekiddies.com");
 
   for (const product of products) {
-    await prisma.product.create({
-      data: {
+    await prisma.product.upsert({
+      where: { slug: product.slug },
+      update: { ...product, image: `/products/${product.slug}.jpg` },
+      create: {
         ...product,
         image: `/products/${product.slug}.jpg`,
       },
     });
   }
-  console.log(`Created ${products.length} products.`);
+  console.log(`Upserted ${products.length} products.`);
 }
 
 main()

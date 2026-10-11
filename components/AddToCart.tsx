@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/format";
@@ -22,6 +22,13 @@ export default function AddToCart({ product }: Props) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current);
+    };
+  }, []);
 
   const outOfStock = product.stock <= 0;
 
@@ -36,7 +43,8 @@ export default function AddToCart({ product }: Props) {
       qty,
     });
     setAdded(true);
-    setTimeout(() => setAdded(false), 2500);
+    if (addedTimer.current) clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAdded(false), 2500);
   }
 
   return (
@@ -48,6 +56,7 @@ export default function AddToCart({ product }: Props) {
             <button
               key={s}
               type="button"
+              aria-pressed={size === s}
               onClick={() => setSize(s)}
               className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
                 size === s
@@ -99,7 +108,7 @@ export default function AddToCart({ product }: Props) {
           {outOfStock ? "Out of Stock" : `Add to Cart — ${formatNaira(product.price * qty)}`}
         </button>
         {added && (
-          <span className="text-sm font-semibold text-green-700">
+          <span role="status" aria-live="polite" className="text-sm font-semibold text-green-700">
             Added to cart!{" "}
             <Link href="/cart" className="underline">
               View cart

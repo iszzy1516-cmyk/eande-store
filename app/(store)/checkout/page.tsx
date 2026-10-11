@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/format";
 
 export default function CheckoutPage() {
-  const { items, total, clearCart } = useCart();
+  const { items, total } = useCart();
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -61,7 +61,8 @@ export default function CheckoutPage() {
         return;
       }
 
-      clearCart();
+      // Cart is cleared on the verify-success page, so a failed or
+      // abandoned redirect never wipes the customer's cart.
       window.location.href = data.authorization_url;
     } catch {
       setError("Network error. Please check your connection and try again.");

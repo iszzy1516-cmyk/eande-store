@@ -11,6 +11,7 @@ model AdminUser {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  tokenVersion Int      @default(0) // bumped on password change to revoke old sessions
   createdAt    DateTime @default(now())
 }
 
@@ -29,8 +30,8 @@ model Product {
 }
 
 model Order {
-  id           String   @id @default(cuid())
-  reference    String   @unique // Paystack reference
+  id           String  @id @default(cuid())
+  reference    String  @unique // server-generated, unguessable
   customerName String
   email        String
   phone        String

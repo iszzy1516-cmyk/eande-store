@@ -6,6 +6,7 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 export type SessionPayload = {
   sub: string;
   email: string;
+  tv: number; // tokenVersion at issue time — checked against the DB
 };
 
 function secretKey() {
@@ -15,7 +16,8 @@ function secretKey() {
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {
-  return new SignJWT({ ...payload })
+  return new SignJWT({ email: payload.email, tv: payload.tv })
+    .setSubject(payload.sub)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
@@ -27,10 +29,14 @@ export async function verifyToken(
 ): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey());
-    if (typeof payload.sub !== "string" || typeof payload.email !== "string") {
+    if (
+      typeof payload.sub !== "string" ||
+      typeof payload.email !== "string" ||
+      typeof payload.tv !== "number"
+    ) {
       return null;
     }
-    return { sub: payload.sub, email: payload.email };
+    return { sub: payload.sub, email: payload.email, tv: payload.tv };
   } catch {
     return null;
   }

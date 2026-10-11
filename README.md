@@ -22,13 +22,15 @@ npx prisma db seed       # demo admin + 12 sample products
 npm run dev              # http://localhost:3000
 ```
 
-## Demo admin credentials
+## Admin account
 
-| Email                   | Password   |
-| ----------------------- | ---------- |
-| `admin@eandekiddies.com` | `admin123` |
+The admin email is `admin@eandekiddies.com`. There is **no default password in the codebase** — set one before seeding:
 
-**Change these before going live.** To change them, update `prisma/seed.ts` and re-run `npx prisma db seed`, or hash a new password with bcrypt and update the `AdminUser` row.
+```bash
+ADMIN_INITIAL_PASSWORD="your-strong-password" npx prisma db seed
+```
+
+In development, if you skip it, a random password is generated and printed. After first login, change it anytime from **Admin → Settings** (which also revokes all other sessions).
 
 ## Bachs setup (required for real payments)
 

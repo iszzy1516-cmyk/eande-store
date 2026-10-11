@@ -101,7 +101,10 @@ export default function AdminProductsPage() {
       editing ? `/api/admin/products/${editing.id}` : "/api/admin/products",
       {
         method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
         body: JSON.stringify(payload),
       }
     );
@@ -120,6 +123,7 @@ export default function AdminProductsPage() {
     if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
     const res = await fetch(`/api/admin/products/${p.id}`, {
       method: "DELETE",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
     });
     if (res.ok) {
       setProducts((prev) => prev.filter((x) => x.id !== p.id));
