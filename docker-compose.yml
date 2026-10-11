@@ -1,0 +1,32 @@
+services:
+  app:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      # Keep the SQLite database on a persistent volume — never lose orders.
+      DATABASE_URL: "file:/data/eande.db"
+    volumes:
+      - app-data:/data
+    ports:
+      - "127.0.0.1:3000:3000" # localhost only; the tunnel exposes it publicly
+
+  bot:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: "file:/data/eande.db"
+    volumes:
+      - app-data:/data
+    command: npm run bot
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    depends_on:
+      - app
+
+volumes:
+  app-data:
