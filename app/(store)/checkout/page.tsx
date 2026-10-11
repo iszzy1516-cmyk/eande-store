@@ -178,10 +178,10 @@ export default function CheckoutPage() {
           )}
 
           <button type="submit" className="btn-gold w-full" disabled={loading}>
-            {loading ? "Processing..." : `Pay ${formatNaira(total)} with Paystack`}
+            {loading ? "Processing..." : `Pay ${formatNaira(total)} securely`}
           </button>
           <p className="text-center text-xs text-cocoa/50">
-            Secure payment powered by Paystack.
+            Secure payment powered by Bachs.
           </p>
         </form>
 

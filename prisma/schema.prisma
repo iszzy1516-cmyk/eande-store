@@ -38,6 +38,7 @@ model Order {
   items        String // JSON: [{productId, name, size, qty, price}]
   total        Int // total in kobo
   status       String   @default("PENDING") // PENDING | PAID | PROCESSING | SHIPPED | DELIVERED | CANCELLED
+  paymentId    String? // Bachs checkout session id (chk_...)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

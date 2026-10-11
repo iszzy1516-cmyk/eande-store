@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { generateReference, type OrderItem } from "@/lib/orders";
-import { initializeTransaction, paystackConfigured } from "@/lib/paystack";
+import { bachsConfigured, createCheckoutSession } from "@/lib/bachs";
 
 const checkoutSchema = z.object({
   customerName: z
@@ -32,7 +32,7 @@ const checkoutSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  if (!paystackConfigured()) {
+  if (!bachsConfigured()) {
     return NextResponse.json(
       { error: "payment_not_configured" },
       { status: 503 }
@@ -106,19 +106,29 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin") ?? req.nextUrl.origin;
 
   try {
-    const result = await initializeTransaction({
+    const session = await createCheckoutSession({
+      amountKobo: total,
       email,
-      amount: total,
+      name: customerName,
+      phone,
       reference,
-      callback_url: `${origin}/checkout/verify`,
+      successUrl: `${origin}/checkout/verify`,
+      cancelUrl: `${origin}/cart`,
       metadata: { orderId: order.id, reference },
     });
+
+    // Remember the Bachs checkout id so webhooks and the verify page can find this order.
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { paymentId: session.checkoutId },
+    });
+
     return NextResponse.json({
-      authorization_url: result.authorization_url,
+      authorization_url: session.checkoutUrl,
       reference,
     });
   } catch (err) {
-    console.error("Paystack initialize failed:", err);
+    console.error("Bachs checkout creation failed:", err);
     return NextResponse.json(
       { error: "Could not initialize payment. Please try again." },
       { status: 502 }

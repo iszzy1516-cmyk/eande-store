@@ -12,15 +12,19 @@ type State =
 function VerifyClient() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
+  const checkoutId = searchParams.get("checkout_id");
   const [state, setState] = useState<State>({ status: "loading" });
 
   useEffect(() => {
-    if (!reference) {
+    if (!reference && !checkoutId) {
       setState({ status: "failed", message: "No payment reference provided." });
       return;
     }
     let cancelled = false;
-    fetch(`/api/paystack/verify?reference=${encodeURIComponent(reference)}`)
+    const query = checkoutId
+      ? `checkout_id=${encodeURIComponent(checkoutId)}`
+      : `reference=${encodeURIComponent(reference!)}`;
+    fetch(`/api/payment/verify?${query}`)
       .then(async (res) => {
         const data = await res.json();
         if (cancelled) return;
@@ -31,7 +35,7 @@ function VerifyClient() {
               "Payment gateway not configured yet — contact the store to confirm your order.",
           });
         } else if (res.ok && data.status === "success") {
-          setState({ status: "success", reference });
+          setState({ status: "success", reference: data.order?.reference ?? reference ?? "" });
         } else {
           setState({
             status: "failed",
@@ -51,7 +55,7 @@ function VerifyClient() {
     return () => {
       cancelled = true;
     };
-  }, [reference]);
+  }, [reference, checkoutId]);
 
   return (
     <div className="mx-auto max-w-xl px-4 py-20 text-center">

@@ -1,11 +1,11 @@
 # E&E Kiddies Wears 🍼✨
 
-Full-stack e-commerce website for **E&E Kiddies Wears** — baby & kids clothes, shoes, onesies and towels. Gold/yellow theme, Paystack payments (NGN), and a full admin panel.
+Full-stack e-commerce website for **E&E Kiddies Wears** — baby & kids clothes, shoes, onesies and towels. Gold/yellow theme, Bachs payments (NGN), and a full admin panel.
 
 ## Features
 
 - 🛍️ **Storefront** — homepage with categories & featured products, shop with category filters and search, product pages with size selection, cart (saved in the browser), checkout
-- 💳 **Paystack payments** — server-side transaction initialize + verify, prices always recomputed from the database (NGN, kobo)
+- 💳 **Bachs payments** — hosted checkout with server-side verification and signed webhooks, prices always recomputed from the database (NGN)
 - 🔐 **Admin panel** (`/admin/login`) — real authentication (bcrypt + JWT httpOnly cookie), dashboard with stats, orders management with status updates, product CRUD
 - 🗄️ **SQLite + Prisma** — zero-config database, no external services needed for development
 
@@ -30,14 +30,14 @@ npm run dev              # http://localhost:3000
 
 **Change these before going live.** To change them, update `prisma/seed.ts` and re-run `npx prisma db seed`, or hash a new password with bcrypt and update the `AdminUser` row.
 
-## Paystack setup (required for real payments)
+## Bachs setup (required for real payments)
 
-1. Create a Paystack account → [dashboard.paystack.com](https://dashboard.paystack.com) → Settings → API Keys & Webhooks
-2. Copy `.env.example` values into `.env` and fill in:
-   - `PAYSTACK_SECRET_KEY` — your secret key (starts with `sk_test_` / `sk_live_`)
-   - `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` — your public key
-3. Restart the dev server. Without keys, checkout shows a friendly "payment not configured" notice instead of failing.
-4. (Optional) Webhook: point Paystack webhooks to `https://your-domain/api/paystack/webhook` — signature verification is built in.
+1. Create a [Bachs](https://bachs.io) account and open the dashboard (sandbox first — no heavy KYC needed to test).
+2. Copy your API key into `.env` as `BACHS_SECRET_KEY` (`sk_sandbox_...` for testing, `sk_live_...` when going live — the code picks the right API host from the key prefix).
+3. Restart the dev server. Without a key, checkout shows a friendly "payment not configured" notice instead of failing.
+4. (Optional) Webhooks: in the Bachs Developer Portal → Webhooks, add `https://your-domain/api/payment/webhook`, subscribe to `collection.succeeded`, and put the endpoint's signing secret in `.env` as `BACHS_WEBHOOK_SECRET`. Signature verification is built in.
+
+Note: Bachs requires `success_url` to be a public http(s) address — `localhost` is refused even in sandbox. For local payment testing, use a tunnel (e.g. the Bachs CLI's event forwarding, or any HTTPS tunnel) or test on the deployed site.
 
 ## The logo
 
@@ -49,9 +49,9 @@ The client's logo is at `public/logo.jpeg`; `public/logo-mark.png` is a cropped 
 app/
   (store)/        storefront pages (home, shop, product, cart, checkout)
   admin/          admin login + dashboard (orders, products)
-  api/            products, checkout, paystack, auth, admin routes
+  api/            products, checkout, payment (bachs), auth, admin routes
 components/       navbar, footer, product card, admin sidebar, ...
-lib/              db (prisma), auth, jwt, paystack, cart, orders, format
+lib/              db (prisma), auth, jwt, bachs, cart, orders, telegram, format
 prisma/           schema + seed
 public/products/  product photos (client's own)
 scripts/          telegram-bot.ts (conversational uploader)
