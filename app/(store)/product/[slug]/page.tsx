@@ -6,14 +6,14 @@ export const dynamic = "force-static";
 // On the server deployment (Railway) any slug still renders at runtime.
 export async function generateStaticParams() {
   const base = process.env.NEXT_PUBLIC_API_URL;
-  if (!base) return [];
+  if (!base) return [{ slug: "placeholder" }]; // product data loads client-side
   try {
     const res = await fetch(`${base}/api/products`);
-    if (!res.ok) return [];
+    if (!res.ok) return [{ slug: "placeholder" }];
     const d = await res.json();
     return (d.products as { slug: string }[]).map((p) => ({ slug: p.slug }));
   } catch {
-    return [];
+    return [{ slug: "placeholder" }];
   }
 }
 

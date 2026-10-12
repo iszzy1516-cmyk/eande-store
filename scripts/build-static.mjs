@@ -9,10 +9,8 @@ import { spawnSync } from "node:child_process";
 const DISABLED = ".api-disabled-api";
 
 process.env.STATIC_EXPORT = "true";
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  console.error("Set NEXT_PUBLIC_API_URL to your API origin before building.");
-  process.exit(1);
-}
+// NEXT_PUBLIC_API_URL intentionally unset: the Pages worker proxies /api/*
+// same-origin, so the browser never needs an external API origin.
 
 try {
   if (existsSync("app/api")) renameSync("app/api", DISABLED);
