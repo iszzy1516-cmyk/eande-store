@@ -38,6 +38,41 @@ export default function AdminProductsPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function handleImageFile(file: File | undefined | null) {
+    if (!file) return;
+    setUploadError("");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setUploadError("Only JPG, PNG or WebP images.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image is too large (max 5MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch("/api/admin/uploads", {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error || "Upload failed.");
+        return;
+      }
+      setForm((f) => ({ ...f, image: data.url }));
+    } catch {
+      setUploadError("Network error during upload.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function load() {
     const res = await apiFetch("/api/admin/products");
@@ -315,14 +350,42 @@ export default function AdminProductsPage() {
               </div>
               <div>
                 <label className="text-xs font-bold text-cocoa/60">
-                  Image path (optional, e.g. /products/my-item.svg)
+                  Photo
                 </label>
-                <input
-                  value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  className={inputCls}
-                  placeholder="/products/placeholder.svg"
-                />
+                <div className="flex items-center gap-3">
+                  <label
+                    className={`flex-1 cursor-pointer rounded-xl border border-dashed border-gold/40 bg-white px-4 py-4 text-center text-sm font-semibold text-gold transition hover:bg-gold/5 ${uploading ? "opacity-50" : ""}`}
+                  >
+                    {uploading
+                      ? "Uploading…"
+                      : form.image
+                        ? "Change photo"
+                        : "Click to choose a photo"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={(e) => {
+                        handleImageFile(e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {form.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={form.image}
+                      alt="Preview"
+                      className="h-16 w-16 rounded-xl border border-gold/20 object-cover"
+                    />
+                  )}
+                </div>
+                {uploadError && (
+                  <p className="mt-1 text-xs font-semibold text-red-600">
+                    {uploadError}
+                  </p>
+                )}
               </div>
               <label className="flex items-center gap-2 text-sm font-semibold">
                 <input
