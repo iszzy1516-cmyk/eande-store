@@ -23,7 +23,7 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative flex min-h-[70vh] items-center justify-center">
+      <section className="relative flex min-h-[62vh] items-center justify-center sm:min-h-[70vh]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/products/hero.jpg"
@@ -31,11 +31,11 @@ export default function HomePage() {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-white/20" />
-        <div className="relative mx-4 max-w-xl bg-white/95 px-8 py-12 text-center sm:px-14">
-          <h1 className="font-display text-3xl font-bold leading-snug text-gold sm:text-4xl">
+        <div className="relative mx-3 max-w-xl bg-white/95 px-5 py-8 text-center sm:mx-4 sm:px-14 sm:py-12">
+          <h1 className="font-display text-2xl font-bold leading-snug text-gold sm:text-3xl lg:text-4xl">
             Timeless Quality for Early Years
           </h1>
-          <p className="mt-4 text-sm leading-relaxed text-cocoa/70 sm:text-base">
+          <p className="mt-3 text-sm leading-relaxed text-cocoa/70 sm:mt-4 sm:text-base">
             Discover our collection of premium, gentle garments designed for
             newborns and toddlers. Crafted with love and minimalist elegance.
           </p>

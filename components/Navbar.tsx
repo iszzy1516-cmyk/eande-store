@@ -19,7 +19,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-cocoa/5 bg-cream/95 backdrop-blur">
-      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+      <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:h-16 sm:px-4">
         <Link href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -28,7 +28,7 @@ export default function Navbar() {
             className="h-10 w-auto object-contain"
             onError={() => !logoError && setLogoError(true)}
           />
-          <span className="font-display text-xl font-bold tracking-tight text-cocoa">
+          <span className="whitespace-nowrap font-display text-lg font-bold tracking-tight text-cocoa sm:text-xl">
             eande<span className="text-gold">kiddies</span>
           </span>
         </Link>
@@ -45,7 +45,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-5">
+        <div className="flex shrink-0 items-center gap-3 sm:gap-5">
           <Link
             href="/shop"
             className="text-cocoa/80 transition hover:text-gold"
@@ -69,12 +69,12 @@ export default function Navbar() {
       </div>
 
       {/* Mobile nav */}
-      <nav className="flex items-center gap-5 overflow-x-auto px-4 pb-3 md:hidden">
+      <nav className="flex items-center gap-4 overflow-x-auto px-3 pb-3 sm:gap-5 sm:px-4 md:hidden">
         {NAV_LINKS.map((link) => (
           <Link
             key={link.label}
             href={link.href}
-            className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.15em] text-cocoa/70"
+            className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.12em] text-cocoa/70 sm:text-[11px] sm:tracking-[0.15em]"
           >
             {link.label}
           </Link>
