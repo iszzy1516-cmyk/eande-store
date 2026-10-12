@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifyToken } from "@/lib/jwt";
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGIN ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
-function corsHeaders(): Record<string, string> {
+function corsOrigin(req: NextRequest): string | null {
+  const origin = req.headers.get("origin");
+  return origin && FRONTEND_ORIGINS.includes(origin) ? origin : null;
+}
+
+function corsHeaders(origin: string): Record<string, string> {
   return {
-    "Access-Control-Allow-Origin": FRONTEND_ORIGIN ?? "",
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Content-Type, X-Requested-With",
     "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
@@ -17,16 +25,20 @@ export async function middleware(req: NextRequest) {
 
   // CORS for API routes when the frontend is hosted on another origin
   // (Cloudflare Pages <-> Railway). Preflights never carry cookies.
-  if (FRONTEND_ORIGIN && pathname.startsWith("/api/")) {
+  const allowedOrigin = corsOrigin(req);
+  if (allowedOrigin && pathname.startsWith("/api/")) {
     if (req.method === "OPTIONS") {
-      return new NextResponse(null, { status: 204, headers: corsHeaders() });
+      return new NextResponse(null, {
+        status: 204,
+        headers: corsHeaders(allowedOrigin),
+      });
     }
     const res =
       pathname.startsWith("/api/admin/") || pathname.startsWith("/admin")
         ? await guard(req, pathname)
         : NextResponse.next();
     if (res.status !== 307) {
-      res.headers.set("Access-Control-Allow-Origin", FRONTEND_ORIGIN);
+      res.headers.set("Access-Control-Allow-Origin", allowedOrigin);
       res.headers.set("Access-Control-Allow-Credentials", "true");
     }
     return res;
