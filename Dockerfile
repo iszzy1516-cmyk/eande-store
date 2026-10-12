@@ -24,4 +24,7 @@ COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 COPY --from=builder --chown=nextjs:nextjs /app/prisma ./prisma
 USER nextjs
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+# The Telegram upload bot runs as a second process in this container — the
+# keep-alive pings on /api/health keep the container (and the bot) awake
+# on Render's free tier, where standalone Background Workers aren't free.
+CMD ["sh", "-c", "npx prisma migrate deploy && (npm run start & npm run bot & wait)"]
