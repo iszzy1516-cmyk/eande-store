@@ -25,7 +25,7 @@ export default function ProductPageClient() {
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError] = useState<string>("");
 
   useEffect(() => {
     const m = window.location.pathname.match(/\/product\/([^/]+)/);
@@ -170,3 +170,5 @@ export default function ProductPageClient() {
     </div>
   );
 }
+
+// cache-bust 1791934820

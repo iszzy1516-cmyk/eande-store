@@ -1,6 +1,9 @@
 // Cloudflare Pages advanced-mode worker: serve the static site, proxy /api/*
-// to the Render backend same-origin, and fall back to the product page shell
-// for any /product/<slug> URL (product data loads client-side from the API).
+// to the Render backend same-origin, fall back to the product page shell for
+// any /product/<slug> URL, and neutralize immutable caching on JS/CSS chunks
+// (direct-upload Pages deploys don't purge the edge cache by themselves).
+const STATIC_CACHE = "public, max-age=300, must-revalidate";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -24,19 +27,27 @@ export default {
       );
     }
 
-    let asset = await env.ASSETS.fetch(request);
+    let response = await env.ASSETS.fetch(request);
 
     // Product detail pages are rendered client-side; serve the shell for
     // any /product/<slug> that wasn't pre-built.
     if (
-      asset.status === 404 &&
+      response.status === 404 &&
       /^\/product\/[^/]+\/?$/.test(url.pathname)
     ) {
       const fallback = new URL(url);
       fallback.pathname = "/product/placeholder/";
-      asset = await env.ASSETS.fetch(new Request(fallback, request));
+      response = await env.ASSETS.fetch(new Request(fallback, request));
     }
 
-    return asset;
+    // Direct-upload deployments reuse the same chunk URLs with new content;
+    // edge-cached "immutable" bytes would otherwise stick for a year.
+    if (url.pathname.startsWith("/_next/static/") && response.ok) {
+      const headers = new Headers(response.headers);
+      headers.set("Cache-Control", STATIC_CACHE);
+      return new Response(response.body, { status: response.status, headers });
+    }
+
+    return response;
   },
 };
