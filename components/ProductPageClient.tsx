@@ -19,11 +19,17 @@ type Product = {
   sizes: string;
 };
 
-export default function ProductPageClient({ slug }: { slug: string }) {
+export default function ProductPageClient() {
+  const [slug, setSlug] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    const m = window.location.pathname.match(/\/product\/([^/]+)/);
+    setSlug(m ? decodeURIComponent(m[1]) : "");
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
