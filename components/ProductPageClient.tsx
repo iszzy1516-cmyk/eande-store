@@ -25,6 +25,7 @@ export default function ProductPageClient() {
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const m = window.location.pathname.match(/\/product\/([^/]+)/);
@@ -40,7 +41,16 @@ export default function ProductPageClient() {
           if (!cancelled) setNotFound(true);
           return null;
         }
-        return r.ok ? r.json() : null;
+        if (!r.ok) {
+          if (!cancelled) setLoadError(`API returned ${r.status}`);
+          return null;
+        }
+        return r.json();
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setLoadError(`fetch failed: ${err?.message ?? "network error"}`);
+        return null;
       })
       .then(async (d) => {
         if (cancelled || !d?.product) return;
@@ -77,6 +87,11 @@ export default function ProductPageClient() {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <h1 className="section-title">Product Not Found</h1>
+        {loadError && (
+          <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600">
+            {loadError}
+          </p>
+        )}
         <Link href="/shop" className="btn-gold mt-8">
           Back to Shop
         </Link>
