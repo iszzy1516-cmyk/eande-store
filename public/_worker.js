@@ -3,7 +3,7 @@
 // any /product/<slug> URL, add security headers to every response, and
 // cache-bust static chunks (direct-upload Pages deploys don't purge the edge
 // cache by themselves). Bump CACHE_BUST on every deploy that changes JS/CSS.
-const CACHE_BUST = "4";
+const CACHE_BUST = "5";
 
 const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
