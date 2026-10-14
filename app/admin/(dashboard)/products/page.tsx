@@ -19,6 +19,52 @@ type Product = {
 
 const CATEGORIES = ["CLOTHES", "SHOES", "ONESIES", "TOWELS"];
 
+type CsvRow = {
+  name: string;
+  category: string;
+  priceNaira: number;
+  sizes: string;
+  stock: number;
+  description: string;
+  featured: boolean;
+  image: string;
+  errors: string[];
+};
+
+/** Minimal RFC-4180 CSV parser (handles quotes and escaped quotes). */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field);
+      field = "";
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  if (field !== "" || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
 const emptyForm = {
   name: "",
   description: "",
@@ -40,6 +86,118 @@ export default function AdminProductsPage() {
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string>("");
+
+  function handleCsvFile(file: File | undefined | null) {
+    if (!file) return;
+    setImportResult("");
+    file.text().then((text) => {
+      const rows = parseCsv(text);
+      if (rows.length < 2) {
+        setImportResult("No data rows found. First row must be the header.");
+        return;
+      }
+      const header = rows[0].map((h) => h.trim().toLowerCase());
+      const idx = (names: string[]) =>
+        header.findIndex((h) => names.includes(h));
+
+      const iName = idx(["name"]);
+      const iCat = idx(["category"]);
+      const iPrice = idx(["price", "price_naira", "pricenaira"]);
+      const iSizes = idx(["sizes"]);
+      const iStock = idx(["stock", "qty", "quantity"]);
+      const iDesc = idx(["description", "desc"]);
+      const iFeat = idx(["featured"]);
+      const iImg = idx(["image", "photo", "image_url"]);
+
+      if ([iName, iCat, iPrice, iSizes, iStock, iDesc].some((i) => i === -1)) {
+        setImportResult(
+          "Missing required columns. Need: name, category, price, sizes, stock, description (optional: featured, image)."
+        );
+        return;
+      }
+
+      const parsed: CsvRow[] = rows.slice(1).map((r) => {
+        const get = (i: number) => (r[i] ?? "").trim();
+        const errors: string[] = [];
+        const name = get(iName);
+        const category = get(iCat).toUpperCase();
+        const priceNaira = parseFloat(get(iPrice).replace(/[₦,\s]/g, ""));
+        const stock = parseInt(get(iStock), 10);
+        const sizes = get(iSizes);
+        const description = get(iDesc);
+        if (name.length < 2) errors.push("name too short");
+        if (!["CLOTHES", "SHOES", "ONESIES", "TOWELS"].includes(category))
+          errors.push("bad category");
+        if (!Number.isFinite(priceNaira) || priceNaira <= 0)
+          errors.push("bad price");
+        if (!Number.isInteger(stock) || stock < 0) errors.push("bad stock");
+        if (!sizes) errors.push("missing sizes");
+        if (!description) errors.push("missing description");
+        return {
+          name,
+          category,
+          priceNaira,
+          sizes,
+          stock,
+          description,
+          featured: ["true", "yes", "1"].includes(get(iFeat).toLowerCase()),
+          image: iImg >= 0 ? get(iImg) : "",
+          errors,
+        };
+      });
+      setCsvRows(parsed);
+    });
+  }
+
+  async function importCsv() {
+    if (!csvRows) return;
+    setImporting(true);
+    setImportResult("");
+    try {
+      const res = await apiFetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          products: csvRows.map((r) => ({
+            name: r.name,
+            category: r.category,
+            priceNaira: r.priceNaira,
+            sizes: r.sizes,
+            stock: r.stock,
+            description: r.description,
+            featured: r.featured,
+            image: r.image || undefined,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImportResult(data.error || "Import failed.");
+        return;
+      }
+      const failed = data.results.filter((r: { ok: boolean }) => !r.ok);
+      setImportResult(
+        `Imported ${data.created} of ${data.total} products.` +
+          (failed.length
+            ? ` Failed: ${failed
+                .map((f: { name: string; error?: string }) => `${f.name} (${f.error})`)
+                .join(", ")}`
+            : "")
+      );
+      setCsvRows(null);
+      load();
+    } catch {
+      setImportResult("Network error during import.");
+    } finally {
+      setImporting(false);
+    }
+  }
 
   async function handleImageFile(file: File | undefined | null) {
     if (!file) return;
@@ -178,13 +336,29 @@ export default function AdminProductsPage() {
             Add, edit or remove store products.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openAdd}
-          className="rounded-xl bg-gold px-5 py-2.5 text-sm font-bold text-white shadow transition hover:bg-goldlight"
-        >
-          + Add Product
-        </button>
+        <div className="flex gap-2">
+          <label
+            className="cursor-pointer rounded-xl border border-gold px-5 py-2.5 text-sm font-bold text-gold transition hover:bg-gold/10"
+          >
+            Import CSV
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => {
+                handleCsvFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={openAdd}
+            className="rounded-xl bg-gold px-5 py-2.5 text-sm font-bold text-white shadow transition hover:bg-goldlight"
+          >
+            + Add Product
+          </button>
+        </div>
       </div>
 
       <div className="card mt-6 overflow-x-auto">
@@ -255,6 +429,82 @@ export default function AdminProductsPage() {
           </tbody>
         </table>
       </div>
+
+      {csvRows && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-cocoa/40 p-4">
+          <div className="card max-h-[85vh] w-full max-w-3xl overflow-y-auto p-6">
+            <h2 className="font-display text-xl font-bold">
+              Import {csvRows.length} products
+            </h2>
+            <p className="mt-1 text-xs text-cocoa/60">
+              Rows with errors will be skipped. Columns: name, category,
+              price, sizes, stock, description, featured, image.
+            </p>
+            {importResult && (
+              <p className="mt-3 rounded-lg bg-gold/10 px-3 py-2 text-sm font-semibold text-cocoa">
+                {importResult}
+              </p>
+            )}
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="border-b border-gold/10 text-left text-xs text-cocoa/60">
+                    <th className="px-3 py-2 font-semibold">Name</th>
+                    <th className="px-3 py-2 font-semibold">Category</th>
+                    <th className="px-3 py-2 font-semibold">Price (₦)</th>
+                    <th className="px-3 py-2 font-semibold">Sizes</th>
+                    <th className="px-3 py-2 font-semibold">Stock</th>
+                    <th className="px-3 py-2 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {csvRows.map((r, i) => (
+                    <tr key={i} className="border-b border-gold/5 last:border-0">
+                      <td className="px-3 py-2">{r.name}</td>
+                      <td className="px-3 py-2">{r.category}</td>
+                      <td className="px-3 py-2">
+                        {Number.isFinite(r.priceNaira) ? r.priceNaira : "—"}
+                      </td>
+                      <td className="px-3 py-2">{r.sizes}</td>
+                      <td className="px-3 py-2">{r.stock}</td>
+                      <td className="px-3 py-2">
+                        {r.errors.length ? (
+                          <span className="text-xs font-bold text-red-600">
+                            {r.errors.join(", ")}
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold text-green-700">
+                            ok
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setCsvRows(null)}
+                className="rounded-xl px-4 py-2 text-sm font-bold text-cocoa/60 hover:bg-cocoa/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={importCsv}
+                disabled={importing || csvRows.every((r) => r.errors.length)}
+                className="rounded-xl bg-gold px-5 py-2 text-sm font-bold text-white shadow transition hover:bg-goldlight disabled:opacity-50"
+              >
+                {importing
+                  ? "Importing…"
+                  : `Import ${csvRows.filter((r) => !r.errors.length).length} products`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-cocoa/40 p-4">

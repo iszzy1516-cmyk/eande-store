@@ -55,7 +55,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
       ...data,
       ...(slug ? { slug } : {}),
       ...(image !== undefined
-        ? { image: image.trim() || "/products/placeholder.svg" }
+        ? { image: image.trim() || "/logo-mark.png" }
         : {}),
     },
   });

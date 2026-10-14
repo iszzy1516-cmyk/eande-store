@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     data: {
       ...data,
       slug,
-      image: image?.trim() || "/products/placeholder.svg",
+      image: image?.trim() || "/logo-mark.png",
     },
   });
   return NextResponse.json({ product }, { status: 201 });
